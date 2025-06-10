@@ -15,6 +15,9 @@ build:
 bin:
 	mkdir $(BIN)
 
+qemu-uefi:
+	qemu-system-x86_64 -bios UEFI64.bin -net none
+
 qemu:
 	qemu-system-i386 -m 512M -drive file=$(OUTPUT),format=raw,if=floppy
 
