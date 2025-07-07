@@ -1,6 +1,18 @@
 
-CC = x86_64-w64-mingw32-gcc
+CC = x86_64-w64-mingw32-gcc \
+		-Wl,--subsystem,10 \
+		-e efi_main
+
 LD = x86_64-w64-mingw32-ld
+
+CFLAGS = \
+	-std=c17 \
+	-Wall \
+	-Wextra \
+	-Wpedantic \
+	-mno-red-zone \
+	-ffreestanding \
+	-nostdlib 
 
 BIN = bin/
 BUILD = build/
@@ -22,7 +34,10 @@ build:
 bin:
 	mkdir $(BIN)
 
+
 $(EFI): boot.c
+	$(CC) $(CFLAGS) -I. -o $(BIN)$@ $< \
+		-L /usr/lib -l:libefi.a -l:libgnuefi.a
 
 $(IMG): $(EFI)
 	rm -f $@
@@ -36,7 +51,7 @@ $(IMG): $(EFI)
 	mkfs.fat -F32 $$ESP >/dev/null; \
 	export MTOOLS_SKIP_CHECK=1; \
 	mmd -i $$ESP ::/EFI; mmd -i $$ESP ::/EFI/BOOT; \
-	mcopy -i $$ESP $(EFI) ::/EFI/BOOT/BOOTX64.EFI; \
+	mcopy -i $$ESP $(BIN)$(EFI) ::/EFI/BOOT/BOOTX64.EFI; \
 	dd if=$$ESP of=$@ bs=512 seek=$$START conv=notrunc status=none; \
 	rm -f $$ESP
 
