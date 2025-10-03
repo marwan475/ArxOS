@@ -1,12 +1,11 @@
 
-CC = x86_64-w64-mingw32-gcc \
+CC = x86_64-w64-mingw32-g++ \
 		-Wl,--subsystem,10 \
 		-e efi_main
 
 LD = x86_64-w64-mingw32-ld
 
 CFLAGS = \
-	-std=c17 \
 	-Wall \
 	-Wextra \
 	-Wpedantic \
@@ -34,9 +33,8 @@ build:
 bin:
 	mkdir $(BIN)
 
-
-$(EFI): boot.c
-	$(CC) $(CFLAGS) -I. -o $(BIN)$@ $< \
+$(EFI): Bootloader/bootloader.cpp
+	$(CC) $(CFLAGS) -I. -I./Bootloader -o $(BIN)$@ $< \
 		-L /usr/lib -l:libefi.a -l:libgnuefi.a
 
 $(IMG): $(EFI)
@@ -56,6 +54,57 @@ $(IMG): $(EFI)
 	rm -f $$ESP
 
 qemu-uefi:
-	qemu-system-x86_64 -bios UEFI64.bin -net none -drive file=TwistedOS.img,format=raw
+	qemu-system-x86_64 -bios UEFI64.bin -drive file=TwistedOS.img,format=raw
 
+#qemu-system-x86_64 -bios UEFI64.bin -net none   -drive file=TwistedOS.img,format=raw -device virtio-gpu-pci -display gtk -full-screen
+#ATI Rage 128 Pro ati-vga
 
+CHANGED_FILES := $(shell git diff --name-only --diff-filter=ACMRTUXB HEAD | grep -E '\.(c|cpp|h|hpp)$$')
+
+.PHONY: format
+format:
+	@if [ -n "$(CHANGED_FILES)" ]; then \
+		echo "Formatting changed files:"; \
+		echo "$(CHANGED_FILES)"; \
+		clang-format -i --style="{ \
+			BasedOnStyle: llvm, \
+			IndentWidth: 4, \
+			TabWidth: 4, \
+			UseTab: Never, \
+			ColumnLimit: 100, \
+			BreakBeforeBraces: Allman, \
+			AllowShortIfStatementsOnASingleLine: false, \
+			AllowShortLoopsOnASingleLine: false, \
+			AllowShortFunctionsOnASingleLine: None, \
+			AllowShortBlocksOnASingleLine: Never, \
+			PointerAlignment: Left, \
+			ReferenceAlignment: Left, \
+			AlignOperands: true, \
+			AlignConsecutiveAssignments: true, \
+			AlignConsecutiveDeclarations: true, \
+			AlignTrailingComments: true, \
+			AlignAfterOpenBracket: Align, \
+			BreakBeforeBinaryOperators: All, \
+			SpaceBeforeParens: ControlStatements, \
+			SpacesInParentheses: false, \
+			SpacesInSquareBrackets: false, \
+			SpacesInAngles: false, \
+			SpaceAfterCStyleCast: true, \
+			SpaceBeforeAssignmentOperators: true, \
+			KeepEmptyLinesAtTheStartOfBlocks: false, \
+			SortIncludes: true, \
+			IncludeBlocks: Regroup, \
+			NamespaceIndentation: None, \
+			AccessModifierOffset: -4, \
+			IndentCaseLabels: true, \
+			BreakConstructorInitializersBeforeComma: false, \
+			BreakInheritanceList: BeforeColon, \
+			ConstructorInitializerIndentWidth: 4, \
+			ContinuationIndentWidth: 8, \
+			ReflowComments: true, \
+			SpacesBeforeTrailingComments: 1, \
+			Cpp11BracedListStyle: true \
+		}" $(CHANGED_FILES); \
+	else \
+		echo "No changed C/C++ files."; \
+	fi
