@@ -11,7 +11,9 @@ CFLAGS = \
 	-Wpedantic \
 	-mno-red-zone \
 	-ffreestanding \
-	-nostdlib 
+	-nostdlib \
+	-fno-exceptions \
+	-fno-rtti
 
 BIN = bin/
 BUILD = build/
@@ -33,8 +35,8 @@ build:
 bin:
 	mkdir $(BIN)
 
-$(EFI): Bootloader/bootloader.cpp
-	$(CC) $(CFLAGS) -I. -I./Bootloader -o $(BIN)$@ $< \
+$(EFI): Bootloader/bootloader.cpp utils/printf.cpp Bootloader/Console.cpp
+	$(CC) $(CFLAGS) -I. -I./Bootloader -I./utils -o $(BIN)$@ $^ \
 		-L /usr/lib -l:libefi.a -l:libgnuefi.a
 
 $(IMG): $(EFI)
