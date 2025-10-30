@@ -11,6 +11,8 @@ public:
     Console(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* ConOut);
     void Reset();
     void ClearConsole();
+    void ChangeColor(int forground, int background);
+    void DisplayModeInfo();
     void putchar(char c);
     int  printf_(const char* format, ...);
     ~Console();
