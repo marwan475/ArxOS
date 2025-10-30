@@ -61,13 +61,14 @@ qemu-uefi:
 #qemu-system-x86_64 -bios UEFI64.bin -net none   -drive file=TwistedOS.img,format=raw -device virtio-gpu-pci -display gtk -full-screen
 #ATI Rage 128 Pro ati-vga
 
-CHANGED_FILES := $(shell git diff --name-only --diff-filter=ACMRTUXB HEAD | grep -E '\.(c|cpp|h|hpp)$$')
+# Find all C/C++ source and header files in the repo
+ALL_SOURCE_FILES := $(shell find . -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \))
 
 .PHONY: format
 format:
-	@if [ -n "$(CHANGED_FILES)" ]; then \
-		echo "Formatting changed files:"; \
-		echo "$(CHANGED_FILES)"; \
+	@echo "Formatting all C/C++ files in repository..."
+	@for file in $(ALL_SOURCE_FILES); do \
+		echo "→ Formatting $$file"; \
 		clang-format -i --style="{ \
 			BasedOnStyle: llvm, \
 			IndentWidth: 4, \
@@ -106,7 +107,7 @@ format:
 			ReflowComments: true, \
 			SpacesBeforeTrailingComments: 1, \
 			Cpp11BracedListStyle: true \
-		}" $(CHANGED_FILES); \
-	else \
-		echo "No changed C/C++ files."; \
-	fi
+		}" $$file; \
+	done
+
+

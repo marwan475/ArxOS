@@ -1,9 +1,10 @@
-#include <uefi.hpp>
 #include <Console.hpp>
+#include <uefi.hpp>
 
-Console *Con;
+Console* Con;
 
-extern "C" void _putchar(char character){
+extern "C" void _putchar(char character)
+{
     Con->putchar(character);
 }
 
@@ -11,14 +12,12 @@ extern "C"
 {
     EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
     {
-        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* ConsoleOutput = SystemTable->ConOut;
+        Console efiConsole = Console(SystemTable->ConOut);
+        Con                = &efiConsole;
 
-        Console Cons = Console(SystemTable->ConOut);
-        Con = &Cons;
-        
-        Cons.Reset();
-        Cons.ClearConsole();
-        Cons.printf_("Welcome to ArxOS Bootloader\r\n");
+        efiConsole.Reset();
+        efiConsole.ClearConsole();
+        efiConsole.printf_("Welcome to ArxOS Bootloader\r\n");
 
         while (true)
         {
